@@ -25,9 +25,9 @@ func TestValue(t *testing.T) {
 	client := new(Client)
 	client.Init(testUrl+"/tests", testAuth, nil)
 
-	r := client.Value()
+	_,err := client.Value()
 
-	if r == nil {
+	if err != nil {
 		t.Fatalf("No values returned from the server\n")
 	}
 }

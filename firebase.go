@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -12,7 +13,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"fmt"
 )
 
 // Api is the interface for interacting with Firebase.
@@ -68,18 +68,24 @@ func (c *Client) Init(root, auth string, api Api) {
 }
 
 // Value returns the value of of the current Url.
-func (c *Client) Value() interface{} {
+func (c *Client) Value() (interface{}, error) {
 	// if we have not yet performed a look-up, do it so a value is returned
+	var err error
+
 	if c.value == nil {
 		var v interface{}
-		c = c.Child("", nil, v)
+		c, err = c.Child("", nil, v)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if c == nil {
-		return nil
+		return nil, err
 	}
 
-	return c.value
+	return c.value, nil
 }
 
 // Child returns a populated pointer for a given path.
