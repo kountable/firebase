@@ -36,9 +36,9 @@ func TestChild(t *testing.T) {
 	client := new(Client)
 	client.Init(testUrl+"/tests", testAuth, nil)
 
-	r := client.Child("", nil, nil)
+	_, err := client.Child("", nil, nil)
 
-	if r == nil {
+	if err != nil {
 		t.Fatalf("No child returned from the server\n")
 	}
 }

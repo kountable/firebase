@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"fmt"
 )
 
 // Api is the interface for interacting with Firebase.
@@ -83,18 +84,17 @@ func (c *Client) Value() interface{} {
 
 // Child returns a populated pointer for a given path.
 // If the path cannot be found, a null pointer is returned.
-func (c *Client) Child(path string, params map[string]string, v interface{}) *Client {
+func (c *Client) Child(path string, params map[string]string, v interface{}) (*Client, error) {
 	u := c.Url + "/" + path
 
 	res, err := c.api.Call("GET", u, c.Auth, nil, params)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	err = json.Unmarshal(res, &v)
 	if err != nil {
-		log.Printf("%v\n", err)
-		return nil
+		return nil, err
 	}
 
 	ret := &Client{
@@ -103,7 +103,7 @@ func (c *Client) Child(path string, params map[string]string, v interface{}) *Cl
 		Url:   u,
 		value: v}
 
-	return ret
+	return ret, nil
 }
 
 // Push creates a new value under the current root url.
@@ -111,7 +111,6 @@ func (c *Client) Child(path string, params map[string]string, v interface{}) *Cl
 func (c *Client) Push(value interface{}, params map[string]string) (*Client, error) {
 	body, err := json.Marshal(value)
 	if err != nil {
-		log.Printf("%v\n", err)
 		return nil, err
 	}
 
@@ -124,7 +123,6 @@ func (c *Client) Push(value interface{}, params map[string]string) (*Client, err
 
 	err = json.Unmarshal(res, &r)
 	if err != nil {
-		log.Printf("%v\n", err)
 		return nil, err
 	}
 
@@ -221,7 +219,6 @@ func (c *Client) Rules(params map[string]string) (Rules, error) {
 func (c *Client) SetRules(rules *Rules, params map[string]string) error {
 	body, err := json.Marshal(rules)
 	if err != nil {
-		log.Printf("%v\n", err)
 		return err
 	}
 
@@ -256,30 +253,24 @@ func (f *f) Call(method, path, auth string, body []byte, params map[string]strin
 
 	req, err := http.NewRequest(method, path, bytes.NewReader(body))
 	if err != nil {
-		log.Printf("Cannot create Firebase request: %v\n", err)
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Cannot create Firebase request: %v\n", err))
 	}
 
 	req.Close = true
-	log.Printf("Calling %v %q\n", method, path)
 
 	res, err := httpClient.Do(req)
 	if err != nil {
-		log.Printf("Request to Firebase failed: %v\n", err)
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Request to Firebase failed: %v\n", err))
 	}
 	defer res.Body.Close()
 
 	ret, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Printf("Cannot parse Firebase response: %v\n", err)
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Cannot parse Firebase response: %v\n", err))
 	}
 
 	if res.StatusCode >= 400 {
-		err = errors.New(string(ret))
-		log.Printf("Error encountered from Firebase: %v\n", err)
-		return nil, err
+		return nil, errors.New(string(ret))
 	}
 
 	return ret, nil
