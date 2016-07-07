@@ -88,6 +88,19 @@ func (c *Client) Value() (interface{}, error) {
 	return c.value, nil
 }
 
+
+func (c *Client) SetPath(path string) *Client {
+	u := c.Url + "/" + path
+
+	client := &Client{
+		api:   c.api,
+		Auth:  c.Auth,
+		Url:   u,
+	}
+
+	return client
+}
+
 // Child returns a populated pointer for a given path.
 // If the path cannot be found, a null pointer is returned.
 func (c *Client) Child(path string, params map[string]string, v interface{}) (*Client, error) {
