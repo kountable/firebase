@@ -88,14 +88,13 @@ func (c *Client) Value() (interface{}, error) {
 	return c.value, nil
 }
 
-
 func (c *Client) SetPath(path string) *Client {
 	u := c.Url + "/" + path
 
 	client := &Client{
-		api:   c.api,
-		Auth:  c.Auth,
-		Url:   u,
+		api:  c.api,
+		Auth: c.Auth,
+		Url:  u,
 	}
 
 	return client
@@ -192,20 +191,20 @@ func (c *Client) Set(path string, value interface{}, params map[string]string) (
 }
 
 // Update performs a partial update with the given value at the specified path.
-func (c *Client) Update(path string, value interface{}, params map[string]string) error {
+func (c *Client) Update(value interface{}, params map[string]string) error {
 	body, err := json.Marshal(value)
 	if err != nil {
 		log.Printf("%v\n", err)
 		return err
 	}
 
-	_, err = c.api.Call("PATCH", c.Url+"/"+path, c.Auth, body, params)
+	_, err = c.api.Call("PATCH", c.Url, c.Auth, body, params)
 
 	// if we've just updated the root node, clear the value so it gets looked up
 	// again and populated correctly since we just applied a diffgram
-	if len(path) == 0 {
-		c.value = nil
-	}
+	//if len(path) == 0 {
+	//	c.value = nil
+	//}
 
 	return err
 }
